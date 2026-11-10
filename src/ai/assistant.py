@@ -19,7 +19,7 @@ class AIAssistant:
         if HAS_GENAI and self.api_key:
             genai.configure(api_key=self.api_key, transport="rest")
             # Revert to the universally supported stable flash model
-            self.model = genai.GenerativeModel('gemini-3.8-flash')
+            self.model = genai.GenerativeModel('gemini-3.5-flash-lite')
             self.is_ready = True
 
     def explain(self, context_data: dict, user_query: str) -> str:

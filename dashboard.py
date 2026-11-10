@@ -1,6 +1,11 @@
 import streamlit as st
 import numpy as np
 import os
+import sys
+
+# Add the src folder to the Python path so internal imports work
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'src')))
+
 import pandas as pd
 from src.core.link import OpticalLinkSystem
 from src.modules.optimizer import LinkOptimizer

@@ -1,9 +1,9 @@
 import numpy as np
-from core.utils import generate_random_bits, calculate_ber
-from modules.modulation import Modulator
-from modules.fiber import OpticalFiber
-from modules.edfa import EDFA
-from modules.receiver import Receiver
+from src.core.utils import generate_random_bits, calculate_ber
+from src.modules.modulation import Modulator
+from src.modules.fiber import OpticalFiber
+from src.modules.edfa import EDFA
+from src.modules.receiver import Receiver
 class OpticalLinkSystem:
     def __init__(self, config):
         self.c = config

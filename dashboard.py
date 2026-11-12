@@ -1,3 +1,5 @@
+
+
 import streamlit as st
 import numpy as np
 import os
@@ -90,16 +92,53 @@ elif page == "End-to-End Link Designer":
 
 elif page == "Link Optimizer":
     st.title("Link Optimizer")
-    st.write("Find the optimal (lowest power/cost) configuration that passes the BER threshold.")
-    if st.button("Run Optimization"):
-        with st.spinner("Searching configuration space..."):
-            best = LinkOptimizer.optimize({"fiber_length_km": 50.0, "target_ber": 1e-3})
-            if best["status"] == "SUCCESS":
-                st.success("Optimal Configuration Found!")
-                st.json(best["config"])
-                st.write("Estimated BER:", best["results"]["ber"])
-            else:
-                st.error("Optimization failed. No feasible configuration.")
+    st.write("Find the lowest-transmitter-power configuration that meets the BER and link-margin constraints.")
+
+    # Reuse the most recent Link Designer inputs. If the user has not run a
+    # link simulation in this session, use the same defaults as the designer.
+    latest_config = st.session_state.get("latest_config")
+    if latest_config:
+        optimizer_base = dict(latest_config)
+        st.info("Using the latest End-to-End Link Designer configuration. Fibre length and attenuation are fixed during optimization.")
+    else:
+        optimizer_base = {
+            "tx_power_dbm": 0.0,
+            "modulation": "OOK",
+            "fiber_length_km": 50.0,
+            "attenuation_db_km": 0.2,
+            "edfa_enabled": False,
+            "edfa_gain_db": 20.0,
+            "n_bits": 10000,
+            "target_ber": 1e-3,
+        }
+        st.warning("No Link Designer simulation has been run in this session. Using the Link Designer's default 50 km / 0.20 dB/km configuration. Run a simulation first to optimize your own link.")
+
+    st.write("**Fixed link requirements**")
+    fixed_col1, fixed_col2, fixed_col3 = st.columns(3)
+    fixed_col1.metric("Fibre length", f"{optimizer_base.get('fiber_length_km', 50.0):.2f} km")
+    fixed_col2.metric("Attenuation", f"{optimizer_base.get('attenuation_db_km', 0.2):.2f} dB/km")
+    fixed_col3.metric("Target BER", f"{optimizer_base.get('target_ber', 1e-3):.1e}")
+
+    if st.button("Run Optimization", type="primary"):
+        with st.spinner("Evaluating candidate link configurations..."):
+            best = LinkOptimizer.optimize(optimizer_base)
+            st.session_state["latest_optimization"] = best
+
+    best = st.session_state.get("latest_optimization")
+    if best:
+        if best["status"] == "SUCCESS":
+            st.success(f"Optimal feasible configuration found ({best['feasible_count']} feasible candidates).")
+            result_col1, result_col2, result_col3 = st.columns(3)
+            result_col1.metric("Optimized Tx Power", f"{best['config']['tx_power_dbm']:.1f} dBm")
+            result_col2.metric("Received Power", f"{best['results']['rx_power_dbm']:.2f} dBm")
+            result_col3.metric("BER", f"{best['results']['ber']:.2e}")
+            st.subheader("Optimal Configuration")
+            st.json(best["config"])
+            st.caption(best["objective"])
+        else:
+            st.error("Optimization failed: no candidate met both the target BER and non-negative link-margin requirements.")
+            st.write(f"Evaluated {len(best.get('evaluations', []))} candidates; feasible candidates: 0.")
+
 
 elif page == "Machine Learning Classifier":
     st.title("ML Modulation Classifier")

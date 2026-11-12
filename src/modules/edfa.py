@@ -1,6 +1,6 @@
 import numpy as np
-from core.utils import dbm_to_linear, linear_to_dbm
-from core.constants import H, C
+from src.core.utils import dbm_to_linear, linear_to_dbm
+from src.core.constants import H, C
 
 class EDFA:
     def __init__(self, g0_db=20.0, psat_dbm=15.0, nf_db=5.0, wl_nm=1550.0):
